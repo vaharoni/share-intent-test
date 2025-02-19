@@ -1,6 +1,6 @@
 # Overview
 
-This repo demonstrates that `ShareExtension` target still exists in the output of `npx expo config` after installation.
+This repo is linked to [Issue #159](https://github.com/achorein/expo-share-intent/issues/159) of the `expo-share-intent` repo. It demonstrates that `ShareExtension` target still exists in the output of `npx expo config` after installation.
 
 The [README.md](https://github.com/achorein/expo-share-intent?tab=readme-ov-file#ios-extension-target) specifies:
 
