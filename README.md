@@ -1,50 +1,92 @@
-# Welcome to your Expo app 👋
+# Overview
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This repo demonstrates that `ShareExtension` target still exists in the output of `npx expo config` after installation.
 
-## Get started
+The [README.md](https://github.com/achorein/expo-share-intent?tab=readme-ov-file#ios-extension-target) specifies:
 
-1. Install dependencies
+> When building on EAS you should only have one extension target (during credentials setting process).
+>
+> To avoid expo auto configuration to add an experimental "appExtensions" to app.json you must manually configure your eas build (projectId in > app.json and a eas.json file).
 
-   ```bash
-   npm install
-   ```
+And links to [this issue](https://github.com/achorein/expo-share-intent-demo/issues/1).
 
-2. Start the app
+However, despite following the instructions above, `npx expo config` outputs the following:
 
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```typescript
+ extra: {
+    router: {
+      origin: false
+    },
+    eas: {
+      projectId: 'd1273804-db22-4f23-8059-447d75a05275',
+      build: {
+        experimental: {
+          ios: {
+            appExtensions: [
+              {
+                targetName: 'ShareExtension',
+                bundleIdentifier: 'com.vaharoni.shareintenttest.share-extension',
+                entitlements: {
+                  'com.apple.security.application-groups': [
+                    'group.com.vaharoni.shareintenttest'
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+And when running `eas build --local --platform ios --profile development`, the output deemed problematic by the [linked issue](https://github.com/achorein/expo-share-intent-demo/issues/1) is observed:
 
-## Learn more
+```
+Failed to read the app config from the project using "npx expo config" command: Unexpected token 'e', "[expo-share"... is not valid JSON.
+Falling back to the version of "@expo/config" shipped with the EAS CLI.
+✔ Using remote iOS credentials (Expo server)
 
-To learn more about developing your project with Expo, look at the following resources:
+We found that the scheme you want to build consists of many targets.
+You have to set up credentials for each of the targets.
+They can share the same Distribution Certificate but require separate Provisioning Profiles.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Setting up credentials for following targets:
+- Target: shareintenttest
+  Bundle Identifier: com.vaharoni.shareintenttest
+- Target: ShareExtension
+  Bundle Identifier: com.vaharoni.shareintenttest.share-extension
 
-## Join the community
+Setting up credentials for target shareintenttest (com.vaharoni.shareintenttest)
+```
 
-Join our community of developers creating universal apps.
+# Repo Reproduction
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This repo was created by running:
+
+```bash
+npx create-expo-app@latest
+npx expo install expo-dev-client
+eas build
+npm install expo-share-intent patch-package
+```
+
+The following was added to `package.json`:
+
+```json
+"scripts": {
+   "postinstall": "patch-package"
+}
+```
+
+A patch file `xcode+3.0.1.patch` was added to `patches/` with [this content](https://github.com/achorein/expo-share-intent/blob/main/example/basic/patches/xcode%2B3.0.1.patch).
+
+The following was added to `app.json`:
+
+```json
+"plugins": [
+   "expo-share-intent"
+]
+```
+
+Note that `scheme` was left intact in `app.json` (but it exists).

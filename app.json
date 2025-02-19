@@ -38,9 +38,7 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      [
-        "expo-share-intent"
-      ]
+      "expo-share-intent"
     ],
     "experiments": {
       "typedRoutes": true
